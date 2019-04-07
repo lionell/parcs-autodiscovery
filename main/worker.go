@@ -18,7 +18,9 @@ func main() {
 		masterIP = net.ParseIP(*masterIPFlag)
 	} else {
 		log.Println("Trying to discover the master IP address...")
-		if masterIP, err := parcs.DiscoverMaster(); err != nil {
+		var err error
+		masterIP, err = parcs.DiscoverMaster()
+		if err != nil {
 			log.Fatalf("couldn't discover the master: %v", err)
 		}
 	}

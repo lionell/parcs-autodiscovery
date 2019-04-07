@@ -1,8 +1,10 @@
 package parcs
 
 import (
+	"context"
 	"log"
 	"net"
+	"time"
 )
 
 const port = ":4321"
@@ -15,6 +17,7 @@ func DiscoverMaster() (net.IP, error) {
 		return nil, err
 	}
 	conn, err := net.ListenUDP("udp", addr)
+	defer conn.Close()
 	if err != nil {
 		log.Printf("couldn't listen for the connection: %v", err)
 		return nil, err
@@ -29,6 +32,26 @@ func DiscoverMaster() (net.IP, error) {
 		}
 		if string(buf[:len]) == helloWorld {
 			return from.IP, nil
+		}
+	}
+}
+
+func Broadcast(ctx context.Context) error {
+	conn, err := net.Dial("udp", "255.255.255.255"+port)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	for {
+		_, err := conn.Write([]byte(helloWorld))
+		if err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(1 * time.Second):
 		}
 	}
 }
