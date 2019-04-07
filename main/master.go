@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	go parcs.Broadcast(ctx)
 	time.Sleep(20 * time.Second)
 }

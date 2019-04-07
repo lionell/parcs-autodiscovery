@@ -44,12 +44,14 @@ func Broadcast(ctx context.Context) error {
 	defer conn.Close()
 
 	for {
+		log.Print("Broadcasting 'hello world' message.")
 		_, err := conn.Write([]byte(helloWorld))
 		if err != nil {
 			return err
 		}
 		select {
 		case <-ctx.Done():
+			log.Print("Finished broadcasting.")
 			return nil
 		case <-time.After(1 * time.Second):
 		}
