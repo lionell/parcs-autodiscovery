@@ -10,6 +10,7 @@ import (
 const port = ":4321"
 const helloWorld = "Hello, world!"
 
+// TODO(xlionell): Take context.Context as a parameter and stop on <-ctx.Done()
 func DiscoverMaster() (net.IP, error) {
 	addr, err := net.ResolveUDPAddr("udp", port)
 	if err != nil {
@@ -36,23 +37,33 @@ func DiscoverMaster() (net.IP, error) {
 	}
 }
 
-func Broadcast(ctx context.Context) error {
-	conn, err := net.Dial("udp", "255.255.255.255"+port)
+func Broadcast(ctx context.Context) <-chan error {
+	errCh := make(chan error, 1)
+	go cast(ctx, "255.255.255.255", errCh)
+	go cast(ctx, "127.0.0.1", nil)
+	return errCh
+}
+
+func cast(ctx context.Context, address string, errCh chan<- error) {
+	conn, err := net.Dial("udp", address+port)
 	if err != nil {
-		return err
+		if errCh != nil {
+			errCh <- err
+		}
+		return
 	}
 	defer conn.Close()
 
+	log.Printf("Casting to %v...", address)
 	for {
-		log.Print("Broadcasting 'hello world' message.")
 		_, err := conn.Write([]byte(helloWorld))
-		if err != nil {
-			return err
+		if err != nil && errCh != nil {
+			errCh <- err
 		}
 		select {
 		case <-ctx.Done():
-			log.Print("Finished broadcasting.")
-			return nil
+			log.Printf("Finished casting to %v.", address)
+			return
 		case <-time.After(1 * time.Second):
 		}
 	}
