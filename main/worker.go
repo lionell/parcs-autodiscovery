@@ -25,4 +25,8 @@ func main() {
 		}
 	}
 	log.Printf("Master IP address: %v\n", masterIP)
+	if err := parcs.Register(masterIP); err != nil {
+		log.Fatalf("couldn't register on the master: %v", err)
+	}
+	log.Printf("Successfully registered on master.")
 }
