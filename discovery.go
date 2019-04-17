@@ -37,32 +37,24 @@ func DiscoverMaster() (net.IP, error) {
 	}
 }
 
-func Broadcast(ctx context.Context) <-chan error {
-	errCh := make(chan error, 1)
-	go cast(ctx, "255.255.255.255", errCh)
-	go cast(ctx, "127.0.0.1", nil)
-	return errCh
+func Broadcast(ctx context.Context) {
+	go cast(ctx, "255.255.255.255")
+	go cast(ctx, "127.0.0.1")
 }
 
-func cast(ctx context.Context, address string, errCh chan<- error) {
+func cast(ctx context.Context, address string) {
 	conn, err := net.Dial("udp", address+port)
 	if err != nil {
-		if errCh != nil {
-			errCh <- err
-		}
-		return
+		log.Fatalf("While dialing %v:%v got error: %v", address, port, err)
 	}
 	defer conn.Close()
 
-	log.Printf("Casting to %v...", address)
+	log.Printf("Casting to %v", address)
 	for {
-		_, err := conn.Write([]byte(helloWorld))
-		if err != nil && errCh != nil {
-			errCh <- err
-		}
+		conn.Write([]byte(helloWorld))
 		select {
 		case <-ctx.Done():
-			log.Printf("Finished casting to %v.", address)
+			log.Printf("Finished casting to %v", address)
 			return
 		case <-time.After(1 * time.Second):
 		}

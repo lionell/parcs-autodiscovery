@@ -24,5 +24,5 @@ func main() {
 			log.Fatalf("couldn't discover the master: %v", err)
 		}
 	}
-	log.Printf("Master IP address: %v.\n", masterIP)
+	log.Printf("Master IP address: %v\n", masterIP)
 }
